@@ -1,0 +1,134 @@
+/*
+Copyright 2020 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+#<!--* freshness: { owner: 'ttaggart@google.com' reviewed: '2022-nov-23' } *-->
+
+
+# **************** [ PUB/SUB TOPICS ] *****************
+# *****************************************************
+resource "google_pubsub_topic" "dns_record_add" {
+  name    = "dns-record-add-topic"
+  project = google_project.private_dns.project_id
+}
+
+resource "google_pubsub_topic" "dns_record_delete" {
+  name    = "dns-record-delete-topic"
+  project = google_project.private_dns.project_id
+}
+
+resource "google_pubsub_topic" "dns_record_add_fr" {
+  name    = "dns-record-add-fr-topic"
+  project = google_project.private_dns.project_id
+}
+
+resource "google_pubsub_topic" "dns_record_delete_fr" {
+  name    = "dns-record-delete-fr-topic"
+  project = google_project.private_dns.project_id
+}
+
+
+# ***************** [ LOGGING SINKS ] *****************
+# *****************************************************
+resource "google_logging_project_sink" "dns_record_add" {
+  name        = "dns-record-add-sink"
+  project     = google_project.private_dns.project_id
+  destination = "pubsub.googleapis.com/projects/${var.private_dns_pid}/topics/dns-record-add-topic"
+  filter      = "resource.type=gce_instance AND protoPayload.methodName=v1.compute.instances.insert"
+
+  unique_writer_identity = true
+
+  depends_on = [
+    google_pubsub_topic.dns_record_add
+  ]
+}
+
+resource "google_logging_project_sink" "dns_record_delete" {
+  name        = "dns-record-delete-sink"
+  project     = google_project.private_dns.project_id
+  destination = "pubsub.googleapis.com/projects/${var.private_dns_pid}/topics/dns-record-delete-topic"
+  filter      = "resource.type=gce_instance AND protoPayload.methodName=v1.compute.instances.delete"
+
+  unique_writer_identity = true
+
+  depends_on = [
+    google_pubsub_topic.dns_record_delete
+  ]
+}
+
+resource "google_logging_project_sink" "dns_record_add_fr" {
+  name        = "dns-record-add-fr-sink"
+  project     = google_project.private_dns.project_id
+  destination = "pubsub.googleapis.com/projects/${var.private_dns_pid}/topics/dns-record-add-fr-topic"
+  filter      = "resource.type=gce_forwarding_rule AND protoPayload.methodName=v1.compute.globalForwardingRules.insert"
+
+  unique_writer_identity = true
+
+  depends_on = [
+    google_pubsub_topic.dns_record_add_fr
+  ]
+}
+
+resource "google_logging_project_sink" "dns_record_delete_fr" {
+  name        = "dns-record-delete-fr-sink"
+  project     = google_project.private_dns.project_id
+  destination = "pubsub.googleapis.com/projects/${var.private_dns_pid}/topics/dns-record-delete-fr-topic"
+  filter      = "resource.type=gce_forwarding_rule AND protoPayload.methodName:delete"
+
+  unique_writer_identity = true
+
+  depends_on = [
+    google_pubsub_topic.dns_record_delete_fr
+  ]
+}
+
+# ****************** [ IAM BINDING ] ******************
+# *****************************************************
+resource "google_pubsub_topic_iam_binding" "dns_record_add" {
+  project = google_project.private_dns.project_id
+  topic   = google_pubsub_topic.dns_record_add.name
+  role    = "roles/pubsub.publisher"
+  members = [
+    google_logging_project_sink.dns_record_add.writer_identity,
+  ]
+}
+
+resource "google_pubsub_topic_iam_binding" "dns_record_delete" {
+  project = google_project.private_dns.project_id
+  topic   = google_pubsub_topic.dns_record_delete.name
+  role    = "roles/pubsub.publisher"
+  members = [
+    google_logging_project_sink.dns_record_delete.writer_identity,
+  ]
+}
+
+resource "google_pubsub_topic_iam_binding" "dns_record_add_fr" {
+  project = google_project.private_dns.project_id
+  topic   = google_pubsub_topic.dns_record_add_fr.name
+  role    = "roles/pubsub.publisher"
+  members = [
+    google_logging_project_sink.dns_record_add_fr.writer_identity,
+  ]
+}
+
+resource "google_pubsub_topic_iam_binding" "dns_record_delete_fr" {
+  project = google_project.private_dns.project_id
+  topic   = google_pubsub_topic.dns_record_delete_fr.name
+  role    = "roles/pubsub.publisher"
+  members = [
+    google_logging_project_sink.dns_record_delete_fr.writer_identity,
+  ]
+}
+
