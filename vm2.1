@@ -65,3 +65,14 @@ resource "google_compute_instance" "vm2" {
     google_dns_managed_zone.gcp_private_zone,
   ]
 }
+
+resource "google_dns_record_set" "vm2" {
+  name = "vm2.${google_dns_managed_zone.gcp_private_zone.dns_name}"
+  type = "A"
+  ttl  = 300
+  project = google_project.private_dns.project_id
+
+  managed_zone = google_dns_managed_zone.gcp_private_zone.name
+
+  rrdatas = [google_compute_instance.vm2.network_interface[0].access_config[0].nat_ip]
+}
