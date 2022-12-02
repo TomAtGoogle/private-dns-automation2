@@ -53,7 +53,7 @@ export TF_VAR_zone
 TF_VAR_gcp_dns_zone=[YOUR-FQDN].
 export TF_VAR_gcp_dns_zone
 
-TF_VAR_hostname=vm1.[YOUR-FQDN]
+TF_VAR_hostname=vm2.[YOUR-FQDN]
 export TF_VAR_hostname
 
 TF_VAR_gcp_zone_name=gcp-private-zone
