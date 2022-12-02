@@ -30,7 +30,7 @@ resource "google_compute_instance" "vm2" {
     dns_automanage = "true"
   }
 
-  hostname     = "vm2.naga-gcp.com"
+  hostname     = "vm2.${var.hostname}"
 
   tags         = [
     "allow-rfc1918-in-fwr",
